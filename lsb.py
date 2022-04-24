@@ -7,11 +7,11 @@ def embed(img_array: IntArray, data: bytes, key: bytes) -> IntArray:
     flat_img &= (~np.zeros_like(flat_img) ^ 1)  # Remove LSB
 
     if key:
-        pass
+        pass  # TODO
     else:
-        # TODO: Check hiding capacity
-        # if 8*len(data) > len(flat_img):
-        #     raise ValueError('len(data) exceeds the hiding capacity')
+        # Check hiding capacity
+        if 8*len(data) > len(flat_img):
+            raise ValueError('len(data) exceeds the hiding capacity')
 
         data_bitarray = util.bytes_to_bitarray(data)
         flat_img[:len(data_bitarray)] |= data_bitarray

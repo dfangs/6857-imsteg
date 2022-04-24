@@ -39,8 +39,8 @@ def idct(img: DctOutputArray) -> ImageArray:
 
 def _dct(img: DctInputArray) -> DctOutputArray:
     dct_float = cv2.dct(img.astype(np.float32))
-    return np.rint(dct_float).astype(np.int32)  # Round to nearest int
+    return dct_float.astype(np.int32)
 
 def _idct(img: DctOutputArray) -> DctInputArray:
     idct_float = cv2.idct(img.astype(np.float32))
-    return np.rint(idct_float).astype(np.int16)  # Round to nearest int
+    return idct_float.astype(np.int16)

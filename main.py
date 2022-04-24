@@ -14,6 +14,7 @@ if __name__ == '__main__':
 
     # (2) Hide an (unencrypted) image inside cover image using LSB
     stego_img = stego.hide(cover_img, hidden_img.to_bytes(), mode=stego.Mode.LSB)
+    stego_img.save('output/mit_stego_lsb.jpg')
     recovered_data = stego.recover(stego_img, mode=stego.Mode.LSB)
     truncated_recovered_data = recovered_data[:len(hidden_img.to_bytes())]  # TODO: There shouldn't be the need to truncate?
     assert hidden_img.to_bytes() == truncated_recovered_data
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     stego_img = stego.hide(cover_img, hidden_img.to_bytes(), mode=stego.Mode.DCT_LSB)
     # stego_img.show()
     cover_img.to_grayscale().save('output/mit_grayscale.jpg')
-    stego_img.save('output/mit_stego_img.jpg')
+    stego_img.save('output/mit_stego_dct.jpg')
 
     recovered_data = stego.recover(stego_img, mode=stego.Mode.DCT_LSB)
     truncated_recovered_data = recovered_data[:len(hidden_img.to_bytes())]

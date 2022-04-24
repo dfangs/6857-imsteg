@@ -90,7 +90,6 @@ def _hide_dct_lsb(cover_img: Image, data: bytes, key: bytes) -> Image:
 def _recover_dct_lsb(stego_img: Image, key: bytes) -> bytes:
     if len(stego_img.shape) == 3:
         ycrcb_img = stego_img.to_ycrcb()
-
         dct_array = util.combine_channels(
             [dct(channel) for channel in util.separate_channels(ycrcb_img.array)]
         )
