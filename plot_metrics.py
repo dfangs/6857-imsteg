@@ -27,11 +27,12 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
     x = []
 
     
-    for hidden_capacity in range(0, size, size//perc_increment):
+    for hidden_capacity in range(1, size, size//perc_increment):
         for stego_method in mode_to_psnr:
-            print(stego_method)
             secret = full_secret[:hidden_capacity]
-            stego_img = stego.hide(Image(cover_img), secret, mode=stego_method).array
+            stego_img = stego.hide(Image(cover_img), secret, mode=stego_method).array if hidden_capacity > 0 else cover_img
+
+            cv2.imwrite(f"{stego_method.name}_{hidden_capacity/size * 100}.png", stego_img)
 
             mode_to_psnr[stego_method].append(metriclib.get_psnr(cover_img, stego_img))
         x.append(hidden_capacity)
@@ -72,7 +73,7 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hid
         img = cover_img
         if stego_method:
             img = stego.hide(Image(cover_img), secret, mode=stego_method).array  # NOTE: i changed the API; will tidy up later
-        else:
+        elif hidden_capacity == 0:
             img = cover_img.astype(np.float64)
         rm, sm, rm_neg, sm_neg = metriclib.get_rs(img)
 
@@ -98,12 +99,13 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hid
 
 if __name__ == "__main__":
     # Get inputs
-    cover_img = Image.from_file('cover_image.jpg')
+    cover_img = Image.from_file('images/testimage1_128x96.jpg')
     secret_text = ''
     with open('secret.txt', 'rb') as f:
         secret_text = f.read()
     
-    # plot_rs_graph(cover_img.array, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
-    # plot_rs_graph(cover_img.array, secret_text, 'rs_plot_orig.png')
-    # plot_rs_graph(cover_img.array, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT_LSB)
+
+    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
+    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_orig.png')
+    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT_LSB)
     plot_psnr_graph(cover_img.array, secret_text, 'psnr_plot.png')
