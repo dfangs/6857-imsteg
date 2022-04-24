@@ -30,52 +30,46 @@ def recover(img: Image, mode: StegMode = StegMode.LSB) -> bytes:
     else:
         raise ValueError('given mode is not supported')
 
-def _hide_lsb(img: Union[ImageArray, DctArray], data: bytes, bitlen: int = 8) -> ImageArray:
+def _hide_lsb(img: Union[ImageArray, DctArray], data: bytes) -> ImageArray:
     flat_img = img.flatten()
-    if 8*len(data) > len(flat_img):  # TODO
-        raise ValueError('len(data) exceeds the hiding capacity')
+    # if 8*len(data) > len(flat_img):  # TODO fix
+    #     raise ValueError('len(data) exceeds the hiding capacity')
 
     # Remove LSB
-    flat_img &= (~np.zeros_like(flat_img) - 1)
+    flat_img &= (~np.zeros_like(flat_img) ^ 1)
 
-    data_bitstring = ''.join(f'{{0:0{bitlen}b}}'.format(byte) for byte in data)
-    data_bitarray = np.array([int(bit) for bit in data_bitstring], dtype='uint8')
+    data_bitstring = ''.join('{0:08b}'.format(byte) for byte in data)  # Separate individual bits
+    data_bitarray = np.array(list(data_bitstring), dtype=np.uint8)
     flat_img[:len(data_bitarray)] |= data_bitarray
 
     stego_img = np.reshape(flat_img, img.shape)
     return stego_img
 
-def _recover_lsb(img: ImageArray) -> bytes:
+def _recover_lsb(img: Union[ImageArray, DctArray]) -> bytes:
     flat_img = img.flatten()
     flat_img &= np.ones_like(flat_img)
     data = bytes([int(''.join(bitarray.astype(str)), 2) for bitarray in flat_img.reshape(-1, 8)])
-
     return data
 
 def _hide_dct(img: ImageArray, data: bytes) -> ImageArray:
     dct_img = _dct(img)
-    stego_dct_img = _hide_lsb(dct_img, data, bitlen=32)
-    idct_img = _idct(stego_dct_img)
-    return idct_img
+    stego_dct_img = _hide_lsb(dct_img, data)
+    return _idct(stego_dct_img)
 
 def _recover_dct(img: ImageArray) -> bytes:
-    dct_img = _idct(img)
+    dct_img = _dct(img)
     return _recover_lsb(dct_img)
 
 def _dct(img: ImageArray) -> DctArray:
     if len(img.shape) != 2:
         raise ValueError('Image is not grayscale')
 
-    dct = cv2.dct(img.astype(np.float32))
-    rounded_dct = np.rint(dct)
+    dct_float = cv2.dct(img.astype(np.float32))
+    return np.rint(dct_float).astype(np.int32)
 
-    return rounded_dct.astype(np.int32)
-
-def _idct(dct_img: DctArray) -> ImageArray:
-    if len(dct_img.shape) != 2:
+def _idct(img: DctArray) -> ImageArray:
+    if len(img.shape) != 2:
         raise ValueError('Image is not grayscale')
 
-    idct = cv2.idct(dct_img.astype(np.float32))
-    rounded_idct = np.rint(idct)
-
-    return rounded_idct.astype(np.uint8)
+    idct_float = cv2.idct(img.astype(np.float32))
+    return np.rint(idct_float).astype(np.uint8)

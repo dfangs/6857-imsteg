@@ -26,7 +26,6 @@ class Image:
 
     # TODO: This might not be needed eventually
     def to_grayscale(self) -> Image:
-        print(Image(cv2.cvtColor(self.array, cv2.COLOR_BGR2GRAY)).array.shape)
         return Image(cv2.cvtColor(self.array, cv2.COLOR_BGR2GRAY))
 
     @property
