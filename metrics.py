@@ -1,9 +1,9 @@
-from operator import mul
+from image import Image
 from typing import List
 import cv2
 import numpy as np
 import skimage.metrics as skmetrics
-import stego
+import steganography as stego
 from enum import Enum
 import matplotlib.pyplot as plt
 
@@ -100,7 +100,7 @@ def calculate_count_groups(img: np.array, mask: np.array) -> tuple:
                 count_sing += 1
             else:
                 count_unusable += 1
-            
+
             print(count_reg, count_sing, count_unusable)
 
     total_groups = (count_reg + count_sing + count_unusable)  # for calculation in scale of 0-1
@@ -115,7 +115,7 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret_text: bytes) -> None:
     # assume using grayscale for now
     if len(cover_img.shape) == 3:
         cover_img = cover_img[:, :, 0]
-    
+
     size = np.prod(cover_img.shape)//8
     perc_increment = 10
     metrics = {Metric.SM: [], Metric.RM: [], Metric.RM_NEG: [], Metric.SM_NEG: []}
@@ -125,7 +125,7 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret_text: bytes) -> None:
 
     for hidden_capacity in range(0, size, size//perc_increment):
         secret_text = full_secret_text[:hidden_capacity]
-        stego_img = stego.hide_lsb(cover_img, secret_text)
+        stego_img = stego.hide(Image(cover_img), secret_text, mode=stego.Mode.LSB)  # NOTE: i changed the API; will tidy up later
         print(psnr(cover_img, stego_img))
         print(cover_img)
         print(stego_img)
@@ -137,7 +137,7 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret_text: bytes) -> None:
         metrics[Metric.SM].append(sm)
         metrics[Metric.RM_NEG].append(rm_neg)
         metrics[Metric.SM_NEG].append(sm_neg)
-    
+
     # plotting
     fig, ax = plt.subplots()
 
@@ -149,29 +149,25 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret_text: bytes) -> None:
         ax.plot(x, metrics[metric], label=metric.name)
     ax.legend()
     plt.savefig('rs_plot.png')
-    
-
-
 
 
 if __name__ == "__main__":
-    filepath = 'cover_image.jpg'
-    cover_img = cv2.imread(filepath)
+    cover_img = Image.from_file('cover_image.jpg')
 
-    hidden_text = 'I hate crypto'
+    hidden_text = b'I hate crypto'
     with open('secret.txt', 'rb') as f:
         print(len(f.read()))
-    
+
     secret_text = ''
     with open('secret.txt', 'rb') as f:
         secret_text = f.read()
         print(type(secret_text))
-        plot_rs_graph(cover_img, secret_text)
+        plot_rs_graph(cover_img.array, secret_text)
 
-    stego_img = stego.hide_lsb(cover_img, bytes(hidden_text, 'utf-8'))
-    print(f"PSNR = {psnr(cover_img, stego_img)}")
+    stego_img = stego.hide(cover_img, hidden_text, mode=stego.Mode.LSB)
+    print(f"PSNR = {psnr(cover_img.array, stego_img)}")
 
-    # copied from Project.ipynb file 
+    # copied from Project.ipynb file
     filepath_img2 = 'img-04.bmp'
     mask_size_w, mask_size_h = 8, 8
     mask = np.random.randint(low=0, high=2, size=(mask_size_w, mask_size_h))
