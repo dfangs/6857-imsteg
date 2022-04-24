@@ -21,12 +21,18 @@ class Image:
         array = np.frombuffer(raw_bytes, dtype=np.uint8).reshape(shape)
         return cls(array)
 
+
     def to_bytes(self) -> bytes:
         return bytes(self.array.flatten())
 
-    # TODO: This might not be needed eventually
     def to_grayscale(self) -> Image:
         return Image(cv2.cvtColor(self.array, cv2.COLOR_BGR2GRAY))
+
+    def to_rgb(self) -> Image:
+        return Image(cv2.cvtColor(self.array, cv2.COLOR_YCrCb2BGR))
+
+    def to_ycrcb(self) -> Image:
+        return Image(cv2.cvtColor(self.array, cv2.COLOR_BGR2YCrCb))
 
     @property
     def shape(self):
@@ -35,3 +41,6 @@ class Image:
     def show(self) -> None:
         cv2.imshow('img', self.array)
         cv2.waitKey(0)
+
+    def save(self, filename: str) -> None:
+        cv2.imwrite(filename, self.array)
