@@ -85,7 +85,7 @@ def _hide_dct_lsb(cover_img: Image, data: bytes, key: bytes) -> Image:
     else:
         dct_array = dct(cover_img.array)
         stego_dct_array = lsb.embed(dct_array, data, key)
-        return Image(idct(stego_dct_array)).to_rgb()
+        return Image(idct(stego_dct_array))
 
 def _recover_dct_lsb(stego_img: Image, key: bytes) -> bytes:
     if len(stego_img.shape) == 3:

@@ -27,7 +27,7 @@ def idct(img: DctOutputArray) -> ImageArray:
         raise ValueError('Image is not grayscale')
     nrows, ncols = img.shape
 
-    idct_img = np.zeros_like(img, dtype=np.int8)
+    idct_img = np.zeros_like(img, dtype=np.int16)
 
     # Perform IDCT block-wise, where a block is 8x8 pixels
     for r in range(nrows//8):
@@ -35,12 +35,15 @@ def idct(img: DctOutputArray) -> ImageArray:
             block = img[8*r:8*(r+1), 8*c:8*(c+1)]
             idct_img[8*r:8*(r+1), 8*c:8*(c+1)] = _idct(block)
 
-    return (idct_img + 128).astype(np.uint8)  # Recenter [0, 255] -> [-128, 127]
+    # Floor and ceil out-of-bound values
+    idct_img = np.minimum(np.maximum(idct_img, -128), 127)
+
+    return (idct_img + 128).astype(np.uint8)  # Recenter [-128, 127] -> [0, 255]
 
 def _dct(img: DctInputArray) -> DctOutputArray:
     dct_float = cv2.dct(img.astype(np.float32))
-    return dct_float.astype(np.int32)
+    return np.rint(dct_float).astype(np.int32)  # Round to nearest int
 
 def _idct(img: DctOutputArray) -> DctInputArray:
     idct_float = cv2.idct(img.astype(np.float32))
-    return idct_float.astype(np.int16)
+    return np.rint(idct_float).astype(np.int16)  # Round to nearest int
