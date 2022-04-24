@@ -1,8 +1,19 @@
+from operator import mul
 from typing import List
 import cv2
 import numpy as np
 import skimage.metrics as skmetrics
 import stego
+from enum import Enum
+import matplotlib.pyplot as plt
+
+class Metric(Enum):
+    PSNR = 1
+    RM = 2
+    SM = 3
+    RM_NEG = 4
+    SM_NEG = 5
+
 
 def psnr(cover_img: cv2.Mat, stego_img: cv2.Mat) -> float:
     """
@@ -81,20 +92,81 @@ def calculate_count_groups(img: np.array, mask: np.array) -> tuple:
             discrimination_img_window = discrimination_function(img_window)
             discrimination_flipped_output = discrimination_function(flipped_output)
 
+            print(discrimination_img_window, discrimination_flipped_output)
+
             if discrimination_flipped_output > discrimination_img_window:
                 count_reg += 1
             elif discrimination_flipped_output < discrimination_img_window:
                 count_sing += 1
             else:
                 count_unusable += 1
+            
+            print(count_reg, count_sing, count_unusable)
 
     total_groups = (count_reg + count_sing + count_unusable)  # for calculation in scale of 0-1
     return count_reg / total_groups, count_sing / total_groups
 
+def plot_rs_graph(cover_img: cv2.Mat, full_secret_text: bytes) -> None:
+    """
+    Save rs plot for the given cover_img storing secret_text at different capacities
+    if cover_img is not grayscale, will be using grayscale
+    """
+
+    # assume using grayscale for now
+    if len(cover_img.shape) == 3:
+        cover_img = cover_img[:, :, 0]
+    
+    size = np.prod(cover_img.shape)//8
+    perc_increment = 10
+    metrics = {Metric.SM: [], Metric.RM: [], Metric.RM_NEG: [], Metric.SM_NEG: []}
+
+    mask_size_w, mask_size_h = 8, 8
+    mask = np.random.randint(low=0, high=2, size=(mask_size_w, mask_size_h))
+
+    for hidden_capacity in range(0, size, size//perc_increment):
+        secret_text = full_secret_text[:hidden_capacity]
+        stego_img = stego.hide_lsb(cover_img, secret_text)
+        print(psnr(cover_img, stego_img))
+        print(cover_img)
+        print(stego_img)
+
+        rm, sm = calculate_count_groups(stego_img, mask)
+        rm_neg, sm_neg = calculate_count_groups(stego_img, -mask)
+
+        metrics[Metric.RM].append(rm)
+        metrics[Metric.SM].append(sm)
+        metrics[Metric.RM_NEG].append(rm_neg)
+        metrics[Metric.SM_NEG].append(sm_neg)
+    
+    # plotting
+    fig, ax = plt.subplots()
+
+    x = [perc_increment*i for i in range(perc_increment+1)]
+    ax.set_title('RS Plot for Stego Image')
+    ax.set_ylabel('Percentage of the regular and singular pixel groups')
+    ax.set_xlabel('Percentage of hiding capacity')
+    for metric in metrics:
+        ax.plot(x, metrics[metric], label=metric.name)
+    ax.legend()
+    plt.savefig('rs_plot.png')
+    
+
+
+
+
 if __name__ == "__main__":
     filepath = 'cover_image.jpg'
     cover_img = cv2.imread(filepath)
+
     hidden_text = 'I hate crypto'
+    with open('secret.txt', 'rb') as f:
+        print(len(f.read()))
+    
+    secret_text = ''
+    with open('secret.txt', 'rb') as f:
+        secret_text = f.read()
+        print(type(secret_text))
+        plot_rs_graph(cover_img, secret_text)
 
     stego_img = stego.hide_lsb(cover_img, bytes(hidden_text, 'utf-8'))
     print(f"PSNR = {psnr(cover_img, stego_img)}")
@@ -104,6 +176,7 @@ if __name__ == "__main__":
     mask_size_w, mask_size_h = 8, 8
     mask = np.random.randint(low=0, high=2, size=(mask_size_w, mask_size_h))
     stego_img2 = cv2.cvtColor(cv2.imread(filepath_img2), cv2.COLOR_BGR2RGB).astype('int16')
+    print(stego_img2)
 
     img_size_w, img_size_h = stego_img2.shape[0], stego_img2.shape[1]
 
@@ -114,5 +187,7 @@ if __name__ == "__main__":
 
     mask_size_w, mask_size_h = 8, 8
     mask = np.random.randint(low=0, high=2, size=(mask_size_w, mask_size_h))
+
+    print(stego_img2[:, :, 0].shape, mask.shape)
     print('Rm->%f\tSm->%f'%calculate_count_groups(stego_img2[:,:,0], mask))
     print('R-m->%f\tS-m->%f'%calculate_count_groups(stego_img2[:,:,0], -mask))
