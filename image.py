@@ -4,11 +4,11 @@ import numpy as np
 import numpy.typing as npt
 
 
-ImageArray = npt.NDArray[np.uint8]
+ImageMatrix = npt.NDArray[np.uint8]
 
 class Image:
-    def __init__(self, array: ImageArray) -> None:
-        self.array = array
+    def __init__(self, matrix: ImageMatrix) -> None:
+        self.matrix = matrix
 
     @classmethod
     def from_file(cls, filename: str, grayscale: bool =False) -> Image:
@@ -23,24 +23,27 @@ class Image:
 
 
     def to_bytes(self) -> bytes:
-        return bytes(self.array.flatten())
+        return bytes(self.matrix.flatten())
 
     def to_grayscale(self) -> Image:
-        return Image(cv2.cvtColor(self.array, cv2.COLOR_BGR2GRAY))
+        return Image(cv2.cvtColor(self.matrix, cv2.COLOR_BGR2GRAY))
 
-    def to_rgb(self) -> Image:
-        return Image(cv2.cvtColor(self.array, cv2.COLOR_YCrCb2BGR))
+    @staticmethod
+    def ycrcb_to_rgb(matrix: ImageMatrix) -> ImageMatrix:
+        return cv2.cvtColor(matrix, cv2.COLOR_YCrCb2BGR)
 
-    def to_ycrcb(self) -> Image:
-        return Image(cv2.cvtColor(self.array, cv2.COLOR_BGR2YCrCb))
+    @staticmethod
+    def rgb_to_ycrcb(matrix: ImageMatrix) -> ImageMatrix:
+        return cv2.cvtColor(matrix, cv2.COLOR_BGR2YCrCb)
+
 
     @property
     def shape(self):
-        return self.array.shape
+        return self.matrix.shape
 
     def show(self) -> None:
-        cv2.imshow('img', self.array)
+        cv2.imshow('img', self.matrix)
         cv2.waitKey(0)
 
     def save(self, filename: str) -> None:
-        cv2.imwrite(filename, self.array)
+        cv2.imwrite(filename, self.matrix)
