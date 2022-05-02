@@ -2,6 +2,7 @@ import numpy as np
 import numpy.typing as npt
 import util
 import lsb
+import pvd
 from dct import dct, idct
 from enum import Enum, auto
 from image import Image, ImageArray
@@ -12,6 +13,7 @@ class Mode(Enum):
     LSB = auto()
     DCT_LSB = auto()
     DCT_ADD = auto()
+    PVD = auto()
 
 
 ### PUBLIC API
@@ -36,6 +38,8 @@ def hide(cover_img: Image, data: bytes, mode: Mode, key: bytes = None) -> Image:
         return _hide_dct_lsb(cover_img, data, key)
     elif mode == Mode.DCT_ADD and key:
         return _hide_dct_add(cover_img, data, key)
+    elif mode == Mode.PVD and key:
+        return _hide_pvd(cover_img, data, key)
     else:
         raise ValueError('The given combination of mode and key is not supported')
 
@@ -57,11 +61,21 @@ def recover(stego_img: Image, mode: Mode, key: bytes = None) -> bytes:
         return _recover_dct_lsb(stego_img, key)
     elif mode == Mode.DCT_ADD and key:
         return _recover_dct_add(stego_img, key)
+    elif mode == Mode.PVD and key:
+        return _recover_pvd(stego_img, key)
     else:
         raise ValueError('The given combination of mode and key is not supported')
 
 
 ### IMPLEMENTATION FUNCTIONS
+
+def _hide_pvd(cover_img: Image, data: bytes, key: bytes) -> Image:
+    print(int.from_bytes(key, "big"))
+    return Image(pvd._hide_pvd(cover_img.array, data, int.from_bytes(key, "big")))
+
+def _recover_pvd(stego_img: Image, key: bytes) -> bytes:
+    print(int.from_bytes(key, "big"))
+    return pvd._recover_pvd(stego_img.array, int.from_bytes(key, "big"))
 
 def _hide_lsb(cover_img: Image, data: bytes, key: bytes) -> Image:
     return Image(lsb.embed(cover_img.array, data, key))
