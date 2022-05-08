@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from numpy.random import Generator, PCG64
-from typing import TypeVar
+from typing import TypeVar, Tuple
 
 T = TypeVar('T', bound=np.integer)
 IntArray = npt.NDArray[T]
@@ -40,7 +40,7 @@ def extract(stego_mat: IntArray, key: bytes = None, num_lsb: int = 1) -> bytes:
 
     return _merge_to_bytes(flat_stego, num_lsb)
 
-def _generate_permutation(key: bytes, n: int) -> tuple[IntArray, IntArray]:
+def _generate_permutation(key: bytes, n: int) -> Tuple[IntArray, IntArray]:
     seed = int.from_bytes(key, byteorder='big')
     rng = Generator(PCG64(seed))
 

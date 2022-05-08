@@ -10,7 +10,7 @@ import steganography as stego
 import metrics as metriclib
 from metrics import Metric
 
-def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hidden_capacity_perc: int = 5) -> None:
+def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hidden_capacity_perc: int = 2) -> None:
     """
     Save psnr plot for given cover_img for different hiding
     if cover_img is not grayscale, will be using grayscale
@@ -22,7 +22,7 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
 
     size = np.prod(cover_img.shape)//8
     perc_increment = hidden_capacity_perc
-    stego_modes = [stego.Mode.LSB, stego.Mode.DCT_LSB]
+    stego_modes = [stego.Mode.LSB, stego.Mode.DCT]
     mode_to_psnr = {stego_method:[] for stego_method in stego_modes}
     x = []
 
@@ -30,7 +30,7 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
     for hidden_capacity in range(1, size, size//perc_increment):
         for stego_method in mode_to_psnr:
             secret = full_secret[:hidden_capacity]
-            stego_img = stego.hide(Image(cover_img), secret, mode=stego_method).array if hidden_capacity > 0 else cover_img
+            stego_img = stego.hide(Image(cover_img), secret, stego_method).matrix if hidden_capacity > 0 else cover_img
 
             cv2.imwrite(f"{stego_method.name}_{hidden_capacity/size * 100}.png", stego_img)
 
@@ -50,7 +50,7 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
     plt.savefig(file_to_save)
 
 
-def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hidden_capacity_perc: int = 5, stego_method = None) -> None:
+def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hidden_capacity_perc: int = 2, stego_method = None) -> None:
     """
     Save rs plot for the given cover_img storing full_secret at different capacities
     if cover_img is not grayscale, will be using grayscale
@@ -72,7 +72,7 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hid
         secret = full_secret[:hidden_capacity]
         img = cover_img
         if stego_method:
-            img = stego.hide(Image(cover_img), secret, mode=stego_method).array  # NOTE: i changed the API; will tidy up later
+            img = stego.hide(Image(cover_img), secret, mode=stego_method).matrix  # NOTE: i changed the API; will tidy up later
         elif hidden_capacity == 0:
             img = cover_img.astype(np.float64)
         rm, sm, rm_neg, sm_neg = metriclib.get_rs(img)
@@ -104,8 +104,8 @@ if __name__ == "__main__":
     with open('secret.txt', 'rb') as f:
         secret_text = f.read()
     
-
-    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
-    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_orig.png')
-    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT_LSB)
-    plot_psnr_graph(cover_img.array, secret_text, 'psnr_plot.png')
+    cover_array = cover_img.matrix
+    plot_rs_graph(cover_array, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
+    plot_rs_graph(cover_array, secret_text, 'rs_plot_orig.png')
+    plot_rs_graph(cover_array, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT)
+    plot_psnr_graph(cover_array, secret_text, 'psnr_plot.png')
