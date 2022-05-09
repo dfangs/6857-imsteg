@@ -33,12 +33,9 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
             secret = full_secret[:hidden_capacity]
             stego_img = stego.hide(Image(cover_img), secret, stego_method).matrix if hidden_capacity > 0 else cover_img
 
-            cv2.imwrite(f"{stego_method.name}_{round(hidden_capacity/size * 100)}.png", stego_img.array)
-
-            print(len(secret))
             if stego_method == stego.Mode.PVD:
                 print(stego.recover(stego_img, stego_method, key=key))
-            mode_to_psnr[stego_method].append(metriclib.get_psnr(cover_img, stego_img.array))
+            mode_to_psnr[stego_method].append(metriclib.get_psnr(cover_img, stego_img))
         x.append(hidden_capacity/size*100)
 
     # plotting
@@ -111,13 +108,13 @@ if __name__ == "__main__":
     img_types = ['charlesriver', 'mit', 'testimage1']
     modes = [stego.Mode.LSB, stego.Mode.DCT]
 
-    for img_type in img_types:
-        for mode in modes:
-            stego_img_array = Image.from_file(f"output/{img_type}_stego_{mode.name}.jpg").matrix
-            cover_img_array = Image.from_file(f"images/{img_type}_512x384.jpg").matrix
+    # for img_type in img_types:
+    #     for mode in modes:
+    #         stego_img_array = Image.from_file(f"output/{img_type}_stego_{mode.name}.jpg").matrix
+    #         cover_img_array = Image.from_file(f"images/{img_type}_512x384.jpg").matrix
 
-            print(f"PSNR for {img_type} in mode {mode.name} = {metriclib.get_psnr(cover_img_array, stego_img_array)}")
-    # plot_rs_graph(cover_img.array, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
-    # plot_rs_graph(cover_img.array, secret_text, 'rs_plot_orig.png')
-    # # plot_rs_graph(cover_img.array, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT_LSB)
-    # plot_psnr_graph(cover_img.array, secret_text, 'psnr_plot.png')
+    #         print(f"PSNR for {img_type} in mode {mode.name} = {metriclib.get_psnr(cover_img_array, stego_img_array)}")
+    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
+    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_orig.png')
+    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_DCT.png', stego_method=stego.Mode.DCT)
+    plot_psnr_graph(cover_img.matrix, secret_text, 'psnr_plot.png')
