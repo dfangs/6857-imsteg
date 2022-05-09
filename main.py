@@ -33,14 +33,9 @@ def run_stego_once(
 
 if __name__ == '__main__':
     cover_img = Image.from_file('images/mit_512x384.jpg')
-<<<<<<< HEAD
-    hidden_img = Image.from_file('images/mit_64x48.jpg')
-    message = b'I love crypto'
-=======
     hidden_img = Image.from_file('images/mit_128x96.jpg')
     message = b'I hate crypto'
     secret_key = b'password'
->>>>>>> 3854f6767d6dca9a009b6a8b0a161f428e3a0c28
 
     # (1) Hide text message inside cover image using LSB
     # stego_img = stego.hide(cover_img, message, mode=stego.Mode.LSB)
@@ -51,31 +46,7 @@ if __name__ == '__main__':
     # (2) Hide an (unencrypted) image inside cover image using LSB
     # run_stego_once('mit', cover_img, hidden_img, stego.Mode.LSB)
 
-<<<<<<< HEAD
-    recovered_img = Image.from_bytes(truncated_recovered_data, hidden_img.shape)
-    # recovered_img.show()
-    recovered_img.save('output/mit_recovered_lsb.jpg')
-
-    # (3) Hide an (unencrypted) image inside cover image using DCT
-    stego_img = stego.hide(cover_img, hidden_img.to_bytes(), mode=stego.Mode.DCT_LSB)
-    # stego_img.show()
-    cover_img.to_grayscale().save('output/mit_grayscale.jpg')
-    stego_img.save('output/mit_stego_dct.jpg')
-
-    recovered_data = stego.recover(stego_img, mode=stego.Mode.DCT_LSB)
-    truncated_recovered_data = recovered_data[:len(hidden_img.to_bytes())]
-    recovered_img = Image.from_bytes(truncated_recovered_data, hidden_img.shape)
-    # recovered_img.show()
-    recovered_img.save('output/mit_recovered_dct.jpg')
-
-    # (4) Hide an (unencrypted) image inside cover image using PVD
-    # truncated_recovered_data = recovered_data[:len(hidden_img_smaller.to_bytes())]
-    # recovered_img = Image.from_bytes(truncated_recovered_data, hidden_img_smaller.shape)
-    # # recovered_img.show()
-    # recovered_img.save('output/mit_recovered_dct.jpg')
-=======
     # (3) Hide an (unencrypted) image inside cover image using DCT + key steganography
     # run_stego_once('mit', cover_img, hidden_img, stego.Mode.DCT, key=secret_key, num_lsb=1)
 
     # run_stego_all('mit', cover_img, hidden_img, secret_key)
->>>>>>> 3854f6767d6dca9a009b6a8b0a161f428e3a0c28

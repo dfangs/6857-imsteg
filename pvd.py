@@ -2,13 +2,13 @@ import cv2
 import math
 import numpy as np
 import numpy.typing as npt
-from image import Image, ImageArray
+from image import Image
 from typing import Tuple, Union
 
 DctArray = npt.NDArray[np.int32]
 
 
-def _hide_pvd(cover_img: Union[ImageArray, DctArray], data: bytes, key: int) -> ImageArray:
+def _hide_pvd(cover_img: DctArray, data: bytes, key: int) -> DctArray:
     # let key = threshold
     # cover_img is not greyscale
 
@@ -49,7 +49,7 @@ def _hide_pvd(cover_img: Union[ImageArray, DctArray], data: bytes, key: int) -> 
                 stego_img[r, c, :] = cover_img[r, c, :]
     return stego_img
 
-def _recover_pvd(stego_img: Union[ImageArray, DctArray], key: int) -> bytes:
+def _recover_pvd(stego_img:  DctArray, key: int) -> bytes:
     if len(stego_img.shape) != 3:
         raise ValueError("stego_img must be an array of rgb")
     
