@@ -1,4 +1,5 @@
 import lsb
+import pvd
 from dct import dct, idct
 from enum import Enum, auto
 from image import Image
@@ -6,8 +7,8 @@ from image import Image
 class Mode(Enum):
     """Represents various mode of steganography supported by this package."""
     LSB = auto()
+    PVD = auto()
     DCT = auto()
-    JSTEG = auto()
 
 ### PUBLIC API
 
@@ -29,6 +30,8 @@ def hide(cover_img: Image, data: bytes, mode: Mode, **kwargs) -> Image:
         return _hide_lsb(cover_img, data, **kwargs)
     elif mode == Mode.DCT:
         return _hide_dct(cover_img, data, **kwargs)
+    elif mode == Mode.PVD:
+        return _hide_pvd(cover_img, data, **kwargs)
     else:
         raise ValueError('The given combination of mode and key is not supported')
 
@@ -48,12 +51,20 @@ def recover(stego_img: Image, mode: Mode, **kwargs) -> bytes:
         return _recover_lsb(stego_img, **kwargs)
     elif mode == Mode.DCT:
         return _recover_dct(stego_img, **kwargs)
+    elif mode == Mode.PVD:
+        return _recover_pvd(stego_img, **kwargs)
     else:
         raise ValueError('The given combination of mode and key is not supported')
 
 
 ### IMPLEMENTATION FUNCTIONS
 
+def _hide_pvd(cover_img: Image, data: bytes, key: int = 37) -> Image:
+    return Image(pvd._hide_pvd(cover_img.array, data, key))
+
+def _recover_pvd(stego_img: Image, key: int = 37) -> bytes:
+    return pvd._recover_pvd(stego_img.array, key)
+    
 def _hide_lsb(cover_img: Image, data: bytes, key: bytes = None, num_lsb: int = 1) -> Image:
     return Image(lsb.embed(cover_img.matrix, data, key, num_lsb))
 
