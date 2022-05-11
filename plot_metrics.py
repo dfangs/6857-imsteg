@@ -68,7 +68,6 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hid
     x = []
 
 
-
     for hidden_capacity in range(0, size, size*perc_increment//100):
         secret = full_secret[:hidden_capacity]
         img = cover_img
@@ -104,7 +103,6 @@ if __name__ == "__main__":
     secret_text = ''
     with open('secret.txt', 'rb') as f:
         secret_text = f.read()
-
     img_types = ['charlesriver', 'mit', 'testimage1']
     modes = [stego.Mode.LSB, stego.Mode.DCT]
 
