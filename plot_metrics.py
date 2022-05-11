@@ -17,25 +17,26 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
     """
 
     # assume using grayscale for now
-    if len(cover_img.shape) == 3:
-        cover_img = cover_img[:, :, 0]
 
     size = np.prod(cover_img.shape)//8
     perc_increment = hidden_capacity_perc
-    stego_modes = [stego.Mode.LSB, stego.Mode.DCT_LSB]
+    stego_modes = [stego.Mode.LSB, stego.Mode.DCT]
     mode_to_psnr = {stego_method:[] for stego_method in stego_modes}
     x = []
 
+    # for pvd
+    int_key = 1000
+    key = int_key.to_bytes(2, 'big')
 
-    for hidden_capacity in range(1, size, size//perc_increment):
+    for hidden_capacity in range(50, size, size*perc_increment//100):
         for stego_method in mode_to_psnr:
             secret = full_secret[:hidden_capacity]
-            stego_img = stego.hide(Image(cover_img), secret, mode=stego_method).array if hidden_capacity > 0 else cover_img
+            stego_img = stego.hide(Image(cover_img), secret, stego_method).matrix if hidden_capacity > 0 else cover_img
 
-            cv2.imwrite(f"{stego_method.name}_{hidden_capacity/size * 100}.png", stego_img)
-
+            if stego_method == stego.Mode.PVD:
+                print(stego.recover(stego_img, stego_method, key=key))
             mode_to_psnr[stego_method].append(metriclib.get_psnr(cover_img, stego_img))
-        x.append(hidden_capacity)
+        x.append(hidden_capacity/size*100)
 
     # plotting
     fig, ax = plt.subplots()
@@ -68,11 +69,11 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hid
 
 
 
-    for hidden_capacity in range(0, size, size//perc_increment):
+    for hidden_capacity in range(0, size, size*perc_increment//100):
         secret = full_secret[:hidden_capacity]
         img = cover_img
         if stego_method:
-            img = stego.hide(Image(cover_img), secret, mode=stego_method).array  # NOTE: i changed the API; will tidy up later
+            img = stego.hide(Image(cover_img), secret, mode=stego_method).matrix  # NOTE: i changed the API; will tidy up later
         elif hidden_capacity == 0:
             img = cover_img.astype(np.float64)
         rm, sm, rm_neg, sm_neg = metriclib.get_rs(img)
@@ -104,8 +105,16 @@ if __name__ == "__main__":
     with open('secret.txt', 'rb') as f:
         secret_text = f.read()
 
+    img_types = ['charlesriver', 'mit', 'testimage1']
+    modes = [stego.Mode.LSB, stego.Mode.DCT]
 
+    # for img_type in img_types:
+    #     for mode in modes:
+    #         stego_img_array = Image.from_file(f"output/{img_type}_stego_{mode.name}.jpg").matrix
+    #         cover_img_array = Image.from_file(f"images/{img_type}_512x384.jpg").matrix
+
+    #         print(f"PSNR for {img_type} in mode {mode.name} = {metriclib.get_psnr(cover_img_array, stego_img_array)}")
     plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
     plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_orig.png')
-    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT_LSB)
+    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_DCT.png', stego_method=stego.Mode.DCT)
     plot_psnr_graph(cover_img.matrix, secret_text, 'psnr_plot.png')
