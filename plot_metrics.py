@@ -14,7 +14,7 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
     """
     Save psnr plot for given cover_img for different hiding
     if cover_img is not grayscale, will be using grayscale
-    """ 
+    """
 
     # assume using grayscale for now
     if len(cover_img.shape) == 3:
@@ -26,7 +26,7 @@ def plot_psnr_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, h
     mode_to_psnr = {stego_method:[] for stego_method in stego_modes}
     x = []
 
-    
+
     for hidden_capacity in range(1, size, size//perc_increment):
         for stego_method in mode_to_psnr:
             secret = full_secret[:hidden_capacity]
@@ -66,7 +66,7 @@ def plot_rs_graph(cover_img: cv2.Mat, full_secret: bytes, file_to_save: str, hid
     metrics = {Metric.SM: [], Metric.RM: [], Metric.RM_NEG: [], Metric.SM_NEG: []}
     x = []
 
-    
+
 
     for hidden_capacity in range(0, size, size//perc_increment):
         secret = full_secret[:hidden_capacity]
@@ -103,9 +103,9 @@ if __name__ == "__main__":
     secret_text = ''
     with open('secret.txt', 'rb') as f:
         secret_text = f.read()
-    
 
-    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
-    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_orig.png')
-    plot_rs_graph(cover_img.array, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT_LSB)
-    plot_psnr_graph(cover_img.array, secret_text, 'psnr_plot.png')
+
+    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_LSB.png', stego_method=stego.Mode.LSB)
+    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_orig.png')
+    plot_rs_graph(cover_img.matrix, secret_text, 'rs_plot_DCT_LSB.png', stego_method=stego.Mode.DCT_LSB)
+    plot_psnr_graph(cover_img.matrix, secret_text, 'psnr_plot.png')

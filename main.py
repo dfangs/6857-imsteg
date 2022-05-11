@@ -1,4 +1,5 @@
 from image import Image
+from metrics import get_psnr
 import steganography as stego
 
 def run_stego_all(img_name: str,
@@ -24,12 +25,14 @@ def run_stego_once(
     # Hide image
     stego_img = stego.hide(cover_img, hidden_img.to_bytes(), mode=mode, num_lsb=num_lsb, key=key)
     stego_img.save(f'output/{img_name}_stego_{mode.name}_{num_lsb}bit{with_key}.jpg')
+    print(get_psnr(cover_img.matrix, stego_img.matrix))
 
     # Recover image
     recovered_data = stego.recover(stego_img, mode=mode, num_lsb=num_lsb, key=key)
     truncated_recovered_data = recovered_data[:len(hidden_img.to_bytes())]
     recovered_img = Image.from_bytes(truncated_recovered_data, hidden_img.shape)
-    recovered_img.save(f'output/{img_name}_recovered_{mode.name}_{num_lsb}bit{with_key}.jpg')
+    # recovered_img.save(f'output/{img_name}_recovered_{mode.name}_{num_lsb}bit{with_key}.jpg')
+
 
 if __name__ == '__main__':
     cover_img = Image.from_file('images/mit_512x384.jpg')
@@ -47,6 +50,7 @@ if __name__ == '__main__':
     # run_stego_once('mit', cover_img, hidden_img, stego.Mode.LSB)
 
     # (3) Hide an (unencrypted) image inside cover image using DCT + key steganography
-    # run_stego_once('mit', cover_img, hidden_img, stego.Mode.DCT, key=secret_key, num_lsb=1)
+    for i in range(1, 5):
+        run_stego_once('mit', cover_img, hidden_img, stego.Mode.DCT, key=None, num_lsb=i)
 
     # run_stego_all('mit', cover_img, hidden_img, secret_key)
